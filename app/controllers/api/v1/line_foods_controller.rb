@@ -22,7 +22,7 @@ module Api
           return render json: {
             existing_restaurant: LineFood.other_restaurant(@ordered_food.restaurant.id).first.restaurant.name,
             new_restaurant: Food.find(params[:food_id]).restaurant.name,
-          }, status: not_acceptable
+          }, status: :not_acceptable
         end
 
         set_line_food(@ordered_food)
