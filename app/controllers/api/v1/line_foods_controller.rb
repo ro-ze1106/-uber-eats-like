@@ -2,7 +2,6 @@ module Api
   module V1
     class LineFoodsController < ApplicationController
       before_action :set_food, only: %i[create replace]
-
       def index
         line_foods = LineFood.active
         if line_foods.exists?
@@ -13,7 +12,7 @@ module Api
             amount: line_foods.sum { |line_food| line_food.total_amount },
           }, status: :ok
         else
-          render json: {}, status: no_content
+          render json: {}, status: :no_content
         end
       end
 
@@ -31,17 +30,17 @@ module Api
           render json: {
             line_food: @line_food
           }, status: :created
-          else
-            render json: {}, status: :internal_server_error
-          end
+        else
+          render json: {}, status: :internal_server_error
+        end
+      end
+
+      def replace
+        LineFood.active.other_restaurant(@ordered_food.restaurant.id).each do |line_food|
+          line_food.update_attribute(:active, false)
         end
 
-        def replace
-          LineFood.active.other_restaurant(@ordered_food.restaurant.id).each do |line_food|
-            line_food.update_attribute(:active, false)
-          end
-
-          set_line_food(@ordered_food)
+        set_line_food(@ordered_food)
 
         if @line_food.save
           render json: {
@@ -52,27 +51,27 @@ module Api
         end
       end
 
-        private
+      private
 
-        def set_food
-          @ordered_food = Food.find(params[:food_id])
-        end
+      def set_food
+        @ordered_food = Food.find(params[:food_id])
+      end
 
-        def set_line_food(ordered_food)
-          if ordered_food.line_food.present?
-            @line_food = ordered_food.line_food
-            @line_food.attributes = {
-              count: ordered_food.line_food.count + params[:count],
-              active: true
-            }
-          else
-            @line_food = ordered_food.build_line_food(
-              count: params[:count],
-              restaurant: ordered_food.restaurant,
-              active: true
-            )
-          end
+      def set_line_food(ordered_food)
+        if ordered_food.line_food.present?
+          @line_food = ordered_food.line_food
+          @line_food.attributes = {
+            count: ordered_food.line_food.count + params[:count],
+            active: true
+          }
+        else
+          @line_food = ordered_food.build_line_food(
+            count: params[:count],
+            restaurant: ordered_food.restaurant,
+            active: true
+          )
         end
       end
     end
   end
+end
